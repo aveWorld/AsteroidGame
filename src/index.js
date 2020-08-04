@@ -1,4 +1,3 @@
-window.addEventListener('load', () => {
 let best_score = []
 class Game {
   constructor() {
@@ -340,4 +339,3 @@ class EndGame{
 
 new Game();
 
-})
