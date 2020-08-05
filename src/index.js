@@ -1,4 +1,6 @@
 let best_score = []
+let fps = 60
+let fpsInterval, startTime, now, then, elapsed
 class Game {
   constructor() {
     this.container = document.getElementById('content');
@@ -79,7 +81,8 @@ class Game {
     }, this.asteroidSpawnTime)
    
     
-    requestAnimationFrame((time) => this.update(time));
+    // requestAnimationFrame((time) => this.update(time));
+    this.startAnimating(fps)
   }
 
   onResize() {
@@ -93,22 +96,32 @@ class Game {
   update(time) {
     
 
-    const dt = time - this.prevUpdateTime;
-    this.prevUpdateTime = time;
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
-    
-    this.ctx.drawImage(this.space,0,0,this.canvas.width, this.canvas.height)
-    this.ctx.font = "30px Comic Sans MS"
-    this.ctx.fillStyle = "red";
-    this.ctx.fillText(`Score: ${this.score}`, this.canvas.width - 200, 50);
-    this.handleShipMoving()
-    this.collision()
-    this.rotateShip();
-    this.handleAsteroids();
-    this.handleBullets()
-    this.explosionAnimation()
+    now = Date.now()
+    elapsed = now - then;
+    if(elapsed > fpsInterval){
+       then = now - (elapsed % fpsInterval)
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+      
+      this.ctx.drawImage(this.space,0,0,this.canvas.width, this.canvas.height)
+      this.ctx.font = "30px Comic Sans MS"
+      this.ctx.fillStyle = "red";
+      this.ctx.fillText(`Score: ${this.score}`, this.canvas.width - 200, 50);
+      this.handleShipMoving()
+      this.collision()
+      this.rotateShip();
+      this.handleAsteroids();
+      this.handleBullets()
+      this.explosionAnimation()
+    }
 
     requestAnimationFrame((time) => this.update(time));
+  }
+  
+  startAnimating = (fps) => {
+    fpsInterval = 1000/fps;
+    then = Date.now()
+    startTime = then;
+    this.update()
   }
 
  
@@ -152,8 +165,8 @@ class Game {
   //logic of our ship movements
   handleShipMoving = () => {
     if(this.ship.moving) {
-      this.ship.y -= this.ship.velocity * Math.cos(this.ship.alfa * Math.PI/180)/5 * this.ship.acceleration
-      this.ship.x += this.ship.velocity * Math.sin(this.ship.alfa * Math.PI/180)/5 * this.ship.acceleration
+      this.ship.y -= this.ship.velocity * Math.cos(this.ship.alfa * Math.PI/180) * this.ship.acceleration / fps * 20
+      this.ship.x += this.ship.velocity * Math.sin(this.ship.alfa * Math.PI/180) * this.ship.acceleration  / fps * 20
       this.currentSpeedY = this.ship.velocity
       this.currentSpeedX = this.ship.velocity
       if(this.ship.acceleration < 1.8) this.ship.acceleration += 0.01
@@ -165,10 +178,10 @@ class Game {
       this.ship.y += 0.1 //make impression like in space
     }
     if(this.ship.rotateRight) {
-      this.ship.alfa += this.ship.velocity/5
+      this.ship.alfa += this.ship.velocity/ fps * 20
     }
     if(this.ship.rotateLeft) {
-      this.ship.alfa -= this.ship.velocity/5
+      this.ship.alfa -= this.ship.velocity/ fps * 20
     }
   }
 
@@ -247,8 +260,8 @@ class Game {
       this.ctx.arc(bullet.x, bullet.y, 4, 0,Math.PI * 2);
       this.ctx.fill();
       // this.ctx.fillStyle = '#FF0000';
-      bullet.x += 8 * bullet.angleX;
-      bullet.y -= 8 * bullet.angleY;
+      bullet.x += bullet.angleX  * fps/6;
+      bullet.y -= bullet.angleY * fps/6;
       //detection collision between bullet and asteroid
       this.asteroids.map((asteroid,j) => {
         if(Math.sqrt(Math.pow(asteroid.x - bullet.x, 2) + Math.pow(asteroid.y - bullet.y, 2)) < 4 + asteroid.r * 4/5) { //4 is our buller radius
